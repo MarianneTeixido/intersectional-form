@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Registros locales (datos sensibles — nunca subir)
+datos/
+*.db
+*.sqlite
+*.sqlite3
+
+# Exportaciones
+*.csv
+
+# Notas internas de deploy/uso (no versionar)
+NOTES.md
+CLAUDE.md
+ARQUITECTURA.md
+
+# Secretos del despliegue (solo se versiona la plantilla .example)
+k8s/01-secret.yaml
+k8s/*-secret.yaml
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,51 @@
+# Túnel de salida: cloudflared abre la conexión hacia Cloudflare, así que
+# el cluster no expone ningún puerto entrante.
+#
+# Antes de aplicar:
+#   1. Crea el túnel en Cloudflare Zero Trust → Networks → Tunnels
+#   2. Guarda su token:
+#        kubectl create secret generic cloudflared-token \
+#          --from-literal=TUNNEL_TOKEN='eyJhIjoi...'
+#   3. En el panel del túnel, agrega la ruta pública:
+#        mapeador.tudominio.org  →  http://mapeador.NAMESPACE.svc.cluster.local:80
+#
+# PENDIENTE (autenticación): en ese mismo panel de Zero Trust se pueden
+# proteger por ruta `/admin*` y `/api/admin/*` sin tocar la app, con el
+# método que elijas. Mientras no lo hagas, publica el túnel sabiendo que
+# el panel queda accesible para quien conozca la URL.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  labels: { app: cloudflared }
+spec:
+  replicas: 2          # dos réplicas = el túnel sobrevive a un reinicio
+  selector:
+    matchLabels: { app: cloudflared }
+  template:
+    metadata:
+      labels: { app: cloudflared }
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --no-autoupdate
+            - --metrics
+            - 0.0.0.0:2000
+            - run
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom: { secretKeyRef: { name: cloudflared-token, key: TUNNEL_TOKEN } }
+          livenessProbe:
+            httpGet: { path: /ready, port: 2000 }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 20m,  memory: 64Mi }
+            limits:   { cpu: 200m, memory: 256Mi }
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }

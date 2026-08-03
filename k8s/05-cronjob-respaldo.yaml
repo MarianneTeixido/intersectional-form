@@ -1,0 +1,83 @@
+# Respaldo diario de la base hacia S3 Garage, cifrado antes de salir.
+#
+# Son datos sensibles: el volcado se cifra con GPG (AES-256) dentro del pod
+# y al bucket solo llega el .gpg. Sin la frase de paso ese archivo no sirve
+# de nada, así que guárdala fuera del cluster (gestor de contraseñas).
+#
+# Secretos que necesita:
+#   kubectl create secret generic mapeador-respaldo \
+#     --from-literal=RESPALDO_PASSPHRASE='frase-larga' \
+#     --from-literal=AWS_ACCESS_KEY_ID='...' \
+#     --from-literal=AWS_SECRET_ACCESS_KEY='...'
+#
+# Restaurar:
+#   aws --endpoint-url $GARAGE_ENDPOINT s3 cp s3://BUCKET/mapeador/ARCHIVO.sql.gpg .
+#   gpg --decrypt ARCHIVO.sql.gpg > mapeador.sql
+#   psql "$DATABASE_URL" -f mapeador.sql
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mapeador-respaldo
+spec:
+  schedule: "30 4 * * *"          # todos los días 4:30 (hora del cluster)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+
+          # El initContainer vuelca y cifra; el contenedor principal sube.
+          # Ese orden lo garantiza Kubernetes sin necesidad de sincronizar nada.
+          initContainers:
+            - name: volcar
+              image: postgres:16-alpine
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  apk add --no-cache gnupg >/dev/null
+                  archivo="/respaldo/mapeador-$(date +%Y%m%d-%H%M).sql"
+                  pg_dump "$DATABASE_URL" > "$archivo"
+                  gpg --batch --yes --symmetric --cipher-algo AES256 \
+                      --passphrase "$RESPALDO_PASSPHRASE" "$archivo"
+                  rm -f "$archivo"          # el volcado en claro no sale del pod
+                  ls -lh /respaldo
+              env:
+                - name: DATABASE_URL
+                  valueFrom: { secretKeyRef: { name: mapeador-config, key: DATABASE_URL } }
+                - name: RESPALDO_PASSPHRASE
+                  valueFrom: { secretKeyRef: { name: mapeador-respaldo, key: RESPALDO_PASSPHRASE } }
+              volumeMounts:
+                - { name: respaldo, mountPath: /respaldo }
+
+          containers:
+            - name: subir
+              image: amazon/aws-cli:2
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  aws --endpoint-url "$GARAGE_ENDPOINT" \
+                      s3 cp /respaldo/ "s3://$GARAGE_BUCKET/mapeador/" \
+                      --recursive --exclude "*" --include "*.gpg"
+              env:
+                - name: GARAGE_ENDPOINT
+                  value: "http://garage:3900"      # ajusta al Service de tu Garage
+                - name: GARAGE_BUCKET
+                  value: "respaldos"
+                - name: AWS_DEFAULT_REGION
+                  value: "garage"
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom: { secretKeyRef: { name: mapeador-respaldo, key: AWS_ACCESS_KEY_ID } }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom: { secretKeyRef: { name: mapeador-respaldo, key: AWS_SECRET_ACCESS_KEY } }
+              volumeMounts:
+                - { name: respaldo, mountPath: /respaldo }
+
+          volumes:
+            - name: respaldo
+              emptyDir: {}

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     MAPEADOR INTERSECCIONAL — estructura de la página
+     Este archivo solo contiene HTML. El resto vive en:
+       css/style.css     → todo el estilo visual
+       js/config.js      → constantes (API, grupos de etiquetas, ejes)
+       js/api.js         → comunicación con el servidor local
+       js/formulario.js  → leer / escribir / limpiar el formulario
+       js/app.js         → acciones de los botones y arranque
+     ============================================================ -->
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapeador Interseccional — Marianne Teixido</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <!-- Portada -->
+    <header class="cover">
+      <h1>Mapeador Interseccional</h1>
+      <p class="byline">Marianne Teixido · Posgrado en Música · Tecnología Musical · FaM, UNAM</p>
+      <p>Esta página es un instrumento creado para el análisis interseccional que busca documentar la composición del grupo
+         participante para la investigación XYK, toma como referencia ejes de identidad, contexto y posición epistémica.
+         Tus respuestas se guardan de forma confidencial y solo las consulta el equipo de la investigación.</p>
+      <p><strong>Todos los campos son voluntarios y opcionales.</strong> Puedes dejar en blanco lo que no quieras
+         responder; antes de guardar te avisamos qué secciones quedaron vacías, por si fue sin querer.</p>
+      <span class="marco">Marco teórico: Kimberly Crenshaw · Patricia Hill Collins · María Lugones · Jasbir Puar</span>
+    </header>
+
+    <!-- Progreso -->
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="progressLabel">Ejes de referencia respondidos</span>
+        <span id="progressText">0 de 7</span>
+      </div>
+      <div class="progress-bar" role="progressbar" aria-labelledby="progressLabel"
+           aria-valuemin="0" aria-valuemax="7" aria-valuenow="0">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <main class="card-body">
+
+      <!-- Solo aparece cuando el panel abre esta página con ?editar=ID -->
+      <div class="persona-nav">
+        <span class="edit-pill" id="editPill">✎ Editando registro <span id="editId"></span></span>
+      </div>
+
+      <!-- FORMULARIO -->
+      <form id="mainForm" onsubmit="return false">
+
+        <!-- 1. Identificación -->
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-num" aria-hidden="true">1</span>
+            <h2 class="sec-name">Identificación</h2>
+          </div>
+          <p class="sec-desc">El registro se realiza de forma anónima.</p>
+
+          <div class="field">
+            <label class="field-label" for="f-nombre">ID asignado <span class="ftype">texto libre</span></label>
+            <input type="text" id="f-nombre" placeholder="P-01 / P-02">
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- 2. Ejes de primer orden -->
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-num" aria-hidden="true">2</span>
+            <h2 class="sec-name">Ejes de primer orden</h2>
+            <span class="badge b-str">voluntario, como todo el formulario</span>
+          </div>
+          <p class="sec-desc">Ejes estructurantes de la experiencia: origen étnico-racial, género,
+             territorio y clase.</p>
+
+          <div class="field">
+            <div class="field-label" id="lbl-raza">Origen étnico-racial <span class="ftype multi">selección múltiple</span></div>
+            <div class="field-hint">Autoidentificación — puedes seleccionar más de una opción.</div>
+            <div class="tags" id="raza" role="group" aria-labelledby="lbl-raza">
+              <span class="tag" data-v="Indígena / originaria">Indígena / originaria</span>
+              <span class="tag" data-v="Afrodescendiente / negra">Afrodescendiente / negra</span>
+              <span class="tag" data-v="Mestiza">Mestiza</span>
+              <span class="tag" data-v="Blanca / europea">Blanca / europea</span>
+              <span class="tag" data-v="Asiática / asiático-descendiente">Asiática / asiático-descendiente</span>
+              <span class="tag" data-v="Roma / gitana">Roma / gitana</span>
+              <span class="tag" data-v="Árabe / magrebí">Árabe / magrebí</span>
+              <span class="tag" data-v="__otro__">Otra</span>
+            </div>
+            <div class="other" id="raza-otro"><input type="text" aria-label="Especifica otro origen étnico-racial" placeholder="Especifica..."></div>
+            <div class="other" id="raza-etnia">
+              <label class="field-label" for="f-etnia">Pueblo o etnia <span class="ftype open">texto libre</span></label>
+              <input type="text" id="f-etnia" placeholder="ej. mapuche, nahua, zapoteca, wixárika, aymara...">
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-genero">Género autopercibido <span class="ftype multi">múltiple / abierto</span></div>
+            <div class="field-hint">Lugones: el binario de género es imposición colonial — los términos propios son válidos.</div>
+            <div class="tags" id="genero" role="group" aria-labelledby="lbl-genero">
+              <span class="tag" data-v="Mujer">Mujer</span>
+              <span class="tag" data-v="Hombre">Hombre</span>
+              <span class="tag" data-v="No-binarie">No-binarie</span>
+              <span class="tag" data-v="Trans femenina">Trans femenina</span>
+              <span class="tag" data-v="Trans masculino">Trans masculino</span>
+              <span class="tag" data-v="Género fluido">Género fluido</span>
+              <span class="tag" data-v="Agénero">Agénero</span>
+              <span class="tag" data-v="__otro__">Otro / propio</span>
+            </div>
+            <div class="other" id="genero-otro"><input type="text" id="f-genero-otro" aria-label="Término propio de género" placeholder="Por favor, di cuál..."></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-expresion">Expresión de género <span class="ftype multi">selección múltiple</span></div>
+            <div class="tags" id="expresion" role="group" aria-labelledby="lbl-expresion">
+              <span class="tag" data-v="Femenina">Femenina</span>
+              <span class="tag" data-v="Masculina">Masculina</span>
+              <span class="tag" data-v="Andrógina">Andrógina</span>
+              <span class="tag" data-v="Queer">Queer</span>
+              <span class="tag" data-v="Variable / no fija">Variable / no fija</span>
+              <span class="tag" data-v="No normativa">No normativa</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-origen">Lugar de origen <span class="ftype open">texto libre</span></label>
+            <div class="field-hint">Ciudad, región o comunidad — no solamente el país.</div>
+            <input type="text" id="f-origen" placeholder="ej. Oaxaca, MX / La Habana / zona rural de Boyacá">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-residencia">Lugar de residencia actual <span class="ftype open">texto libre</span></label>
+            <input type="text" id="f-residencia" placeholder="ej. CDMX / Berlín / ciudad fronteriza">
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-clase">Clase social (autoidentificada) <span class="ftype">una opción</span></div>
+            <div class="tags" id="clase" data-single role="group" aria-labelledby="lbl-clase">
+              <span class="tag" data-v="Popular / trabajadora">Popular / trabajadora</span>
+              <span class="tag" data-v="Media-baja">Media-baja</span>
+              <span class="tag" data-v="Media">Media</span>
+              <span class="tag" data-v="Media-alta">Media-alta</span>
+              <span class="tag" data-v="Alta">Alta</span>
+              <span class="tag" data-v="Prefiero no decir">Prefiero no decir</span>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- 3. Ejes de segundo orden -->
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-num" aria-hidden="true">3</span>
+            <h2 class="sec-name">Ejes estructurales de segundo orden</h2>
+            <span class="badge b-str">apuntalar la diversidad</span>
+          </div>
+          <p class="sec-desc">Ejes que suelen quedar fuera de los instrumentos convencionales.</p>
+
+          <div class="field">
+            <div class="field-label" id="lbl-sexualidad">Orientación sexual <span class="ftype multi">múltiple / abierto</span></div>
+            <div class="field-hint">Puar y Lugones: la heteronorma es colonial.</div>
+            <div class="tags" id="sexualidad" role="group" aria-labelledby="lbl-sexualidad">
+              <span class="tag" data-v="Heterosexual">Heterosexual</span>
+              <span class="tag" data-v="Lesbiana">Lesbiana</span>
+              <span class="tag" data-v="Gay / homosexual">Gay / homosexual</span>
+              <span class="tag" data-v="Bisexual">Bisexual</span>
+              <span class="tag" data-v="Pansexual">Pansexual</span>
+              <span class="tag" data-v="Asexual / demisexual">Asexual / demisexual</span>
+              <span class="tag" data-v="Queer">Queer</span>
+              <span class="tag" data-v="__otro__">Término propio</span>
+            </div>
+            <div class="other" id="sexualidad-otro"><input type="text" id="f-sexualidad-otro" aria-label="Término propio de orientación sexual" placeholder="Término propio..."></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-sexo">Sexo asignado al nacer <span class="ftype">una opción</span></div>
+            <div class="field-hint">Se registra disociado del género autopercibido.</div>
+            <div class="tags" id="sexo" data-single role="group" aria-labelledby="lbl-sexo">
+              <span class="tag" data-v="Femenino">Femenino</span>
+              <span class="tag" data-v="Masculino">Masculino</span>
+              <span class="tag" data-v="Intersex">Intersex</span>
+              <span class="tag" data-v="No especificado">No especificado</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-estatus">Estatus migratorio <span class="ftype">una opción</span></div>
+            <div class="tags" id="estatus_migratorio" data-single role="group" aria-labelledby="lbl-estatus">
+              <span class="tag" data-v="Ciudadana/o del país">Ciudadana/o del país</span>
+              <span class="tag" data-v="Residente legal">Residente legal</span>
+              <span class="tag" data-v="Visa / permiso temporal">Visa / permiso temporal</span>
+              <span class="tag" data-v="En proceso de regularización">En proceso de regularización</span>
+              <span class="tag" data-v="Sin documentos">Sin documentos</span>
+              <span class="tag" data-v="Desplazada/o">Desplazada/o</span>
+              <span class="tag" data-v="Refugiada/o">Refugiada/o</span>
+              <span class="tag" data-v="Prefiero no decir">Prefiero no decir</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-discapacidad">(Dis)capacidad / neurodivergencia <span class="ftype multi">múltiple / abierto</span></div>
+            <div class="field-hint">Puar: el cuerpo fuera de la norma productiva es producido por sistemas de opresión.</div>
+            <div class="tags" id="discapacidad" role="group" aria-labelledby="lbl-discapacidad">
+              <span class="tag" data-v="Sin discapacidad identificada">Sin discapacidad identificada</span>
+              <span class="tag" data-v="Discapacidad física / motriz">Discapacidad física / motriz</span>
+              <span class="tag" data-v="Discapacidad visual">Discapacidad visual</span>
+              <span class="tag" data-v="Discapacidad auditiva">Discapacidad auditiva</span>
+              <span class="tag" data-v="Neurodivergente (TDAH, autismo...)">Neurodivergente (TDAH, autismo...)</span>
+              <span class="tag" data-v="Discapacidad psicosocial">Discapacidad psicosocial</span>
+              <span class="tag" data-v="Condición crónica / dolor crónico">Condición crónica / dolor crónico</span>
+              <span class="tag" data-v="__otro__">Otra / no categorizada</span>
+            </div>
+            <div class="other" id="discapacidad-otro"><input type="text" id="f-discap-otro" aria-label="Especifica otra discapacidad o neurodivergencia" placeholder="Especifica..."></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-edad">Edad / generación <span class="ftype">una opción</span></div>
+            <div class="tags" id="edad" data-single role="group" aria-labelledby="lbl-edad">
+              <span class="tag" data-v="Menor de 25">Menor de 25</span>
+              <span class="tag" data-v="25–35">25–35</span>
+              <span class="tag" data-v="36–45">36–45</span>
+              <span class="tag" data-v="46–60">46–60</span>
+              <span class="tag" data-v="Más de 60">Más de 60</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-espiritualidad">Religión / espiritualidad <span class="ftype multi">múltiple / abierto</span></div>
+            <div class="field-hint">Lugones: las cosmologías no-occidentales son saberes destruidos por la colonialidad.</div>
+            <div class="tags" id="espiritualidad" role="group" aria-labelledby="lbl-espiritualidad">
+              <span class="tag" data-v="Atea / agnóstica / laica">Atea / agnóstica / laica</span>
+              <span class="tag" data-v="Cristiana">Cristiana (catól. / evang. / ortod.)</span>
+              <span class="tag" data-v="Práctica indígena / originaria">Práctica indígena / originaria</span>
+              <span class="tag" data-v="Afro (candomblé, santería, vodou...)">Afro (candomblé, santería, vodou...)</span>
+              <span class="tag" data-v="Islam">Islam</span>
+              <span class="tag" data-v="Judaísmo">Judaísmo</span>
+              <span class="tag" data-v="Budismo / hinduismo">Budismo / hinduismo</span>
+              <span class="tag" data-v="__otro__">Espiritualidad propia / sincrética</span>
+            </div>
+            <div class="other" id="espiritualidad-otro"><input type="text" id="f-espirit-otro" aria-label="Especifica otra espiritualidad" placeholder="Especifica..."></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-carceral">Situación carcelaria <span class="ftype">una opción</span></div>
+            <div class="tags" id="situacion_carceral" data-single role="group" aria-labelledby="lbl-carceral">
+              <span class="tag" data-v="Sin experiencia carcelaria">Sin experiencia carcelaria</span>
+              <span class="tag" data-v="Privada/o de la libertad actualmente">Privada/o de la libertad actualmente</span>
+              <span class="tag" data-v="Excarcelada/o">Excarcelada/o</span>
+              <span class="tag" data-v="Familiar encarcelada/o">Familiar encarcelada/o</span>
+              <span class="tag" data-v="Prefiero no decir">Prefiero no decir</span>
+              <span class="tag" data-v="__otro__">Otra</span>
+            </div>
+              <div class="other" id="carcelaria-otro"><input type="text" id="f-carcelaria-otro" aria-label="Especifica otra situacion" placeholder="Especifica..."></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-tamanio">Tamaño corporal (autoidentificado) <span class="ftype">una opción</span></div>
+            <div class="tags" id="tamanio_corporal" data-single role="group" aria-labelledby="lbl-tamanio">
+              <span class="tag" data-v="Normativo / no significativo">Normativo / no significativo</span>
+              <span class="tag" data-v="Gordo / fat (autoidentificado)">Gordo / fat (autoidentificado)</span>
+              <span class="tag" data-v="Muy delgada/o">Muy delgada/o</span>
+              <span class="tag" data-v="Media">Complección media</span>
+              <span class="tag" data-v="Prefiero no decir">Prefiero no decir</span>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- 4. Formación -->
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-num" aria-hidden="true">4</span>
+            <h2 class="sec-name">Formación y ocupación</h2>
+            
+          </div>
+          <p class="sec-desc">Desde dónde se produce el conocimiento: trayectoria formal y saberes no académicos.</p>
+
+          <div class="field">
+            <div class="field-label" id="lbl-educativo">Nivel educativo formal <span class="ftype">una opción</span></div>
+            <div class="tags" id="nivel_educativo" data-single role="group" aria-labelledby="lbl-educativo">
+              <span class="tag" data-v="Sin escolarización formal">Sin escolarización formal</span>
+              <span class="tag" data-v="Primaria / secundaria">Primaria / secundaria</span>
+              <span class="tag" data-v="Preparatoria / bachillerato">Preparatoria / bachillerato</span>
+              <span class="tag" data-v="Técnico / vocacional">Técnico / vocacional</span>
+              <span class="tag" data-v="Licenciatura">Licenciatura</span>
+              <span class="tag" data-v="Maestría">Maestría</span>
+              <span class="tag" data-v="Doctorado">Doctorado</span>
+              <span class="tag" data-v="Posdoctorado">Posdoctorado</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label" id="lbl-noacad">Formación no académica relevante <span class="ftype multi">múltiple / abierto</span></div>
+            <div class="field-hint">Collins: el conocimiento situado fuera de la academia es epistémicamente válido.</div>
+            <div class="tags" id="formacion_no_academica" role="group" aria-labelledby="lbl-noacad">
+              <span class="tag" data-v="Organización comunitaria">Organización comunitaria</span>
+              <span class="tag" data-v="Activismo / militancia">Activismo / militancia</span>
+              <span class="tag" data-v="Saberes artesanales / técnicos">Saberes artesanales / técnicos</span>
+              <span class="tag" data-v="Práctica artística">Práctica artística</span>
+              <span class="tag" data-v="Cuidado / trabajo reproductivo">Cuidado / trabajo reproductivo</span>
+              <span class="tag" data-v="Saber indígena / comunitario">Saber indígena / comunitario</span>
+              <span class="tag" data-v="Práctica espiritual o ritual">Práctica espiritual o ritual</span>
+              <span class="tag" data-v="Autoformación / autodidacta">Autoformación / autodidacta</span>
+              <span class="tag" data-v="__otro__">Otro</span>
+            </div>
+            <div class="other" id="formacion_no_academica-otro"><input type="text" id="f-noacad-otro" aria-label="Especifica otra formación no académica" placeholder="Especifica..."></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-ocupacion">Ocupación actual <span class="ftype open">texto libre</span></label>
+            <input type="text" id="f-ocupacion" placeholder="ej. trabajadore del hogar, artista, activista sin paga, estudiante, trabajadore sexual">
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- 5. Posición epistémica -->
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-num" aria-hidden="true">5</span>
+            <h2 class="sec-name">Posición epistémica</h2>
+          </div>
+          <p class="sec-desc">Collins / Lugones — lo que los campos cerrados no capturan.
+             No hay respuestas correctas ni incorrectas.</p>
+
+          <div class="ep-block">
+            <label for="ep-lugar">¿Desde qué lugar te interpela esta investigación respecto a la voz, IA, representación LGBTIQ+ y la identidad?</label>
+            <span>Interesa el vínculo entre tu experiencia vivida y el tema de la investigación.</span>
+            <textarea id="ep-lugar" placeholder='ej. "Soy migrante sin papeles y el tema de IA me interesa porque quiero saber cómo los sistemas me clasifican sin que yo lo decida"'></textarea>
+          </div>
+
+          <div class="ep-block">
+            <label for="ep-saber">¿Qué sabes consideras que intersectan con la voz y  que no viene de los libros ni academia?</label>
+            <span>Saberes del cuerpo, de la comunidad, de la calle, de la práctica. Collins: el conocimiento de las oprimidas.</span>
+            <textarea id="ep-saber" placeholder='ej. "Sé cómo funciona la vigilancia policial desde adentro" / "Conozco prácticas curativas que la medicina no reconoce"'></textarea>
+          </div>
+
+          <div class="ep-block">
+            <label for="ep-falta">¿Qué perspectivas o voces faltan normalmente en estas conversaciones?</label>
+            <span>Crenshaw: los marcos incompletos excluyen posiciones marginalizadas. Esta pregunta mapea los puntos ciegos del grupo.</span>
+            <textarea id="ep-falta" placeholder='ej. "Las personas que usan tecnología pero no la crean" / "Comunidades rurales sin acceso"'></textarea>
+          </div>
+
+          <div class="ep-block">
+            <label for="ep-tension">¿Hay algo en tu trayectoria o identidad que te genere tensión dentro de este espacio?</label>
+            <span>Puar: los cuerpos-ensamblaje contienen contradicciones. Nombrar las tensiones es parte del análisis.</span>
+            <textarea id="ep-tension" placeholder='ej. "Estudié la universidad pero vengo de una comunidad en condiciones de marginación" / "Soy migrante pero con pasaporte europeo"'></textarea>
+          </div>
+        </div>
+
+        <!-- Cobertura -->
+        <div class="coverage">
+          <div class="cov-title">Cobertura de ejes de referencia (ninguno es obligatorio)</div>
+          <div class="cov-grid" id="covGrid"></div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="actions">
+          <button type="button" class="btn primary" onclick="guardar()">Enviar mis respuestas</button>
+          <div class="btn-row">
+            <button type="button" class="btn" onclick="clearForm()">Limpiar formulario</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Confirmación (sustituye al formulario una vez enviado) -->
+      <div class="gracias" id="graciasSection">
+        <h2 class="gracias-title">Gracias por responder</h2>
+        <p>Tus respuestas quedaron registradas. Solo el equipo de la investigación
+           puede consultarlas, y se usan únicamente para el análisis de la
+           composición del grupo participante.</p>
+        <p class="gracias-folio">Tu folio: <strong id="folioGracias"></strong></p>
+        <button type="button" class="btn" onclick="otraRespuesta()">Llenar otro formulario</button>
+      </div>
+
+      <div class="server-note">
+        <span class="dot" id="apiDot" aria-hidden="true"></span>
+        <span id="apiText">Verificando conexión...</span>
+      </div>
+
+      <footer class="footer-note">
+        Instrumento con datos sensibles: se usa siempre con consentimiento informado.<br>
+        Puedes dejar en blanco cualquier campo que no quieras responder.
+      </footer>
+
+    </main><!-- /card-body -->
+  </div><!-- /card -->
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Modal de aviso: secciones que quedaron sin ninguna respuesta.
+     Solo avisa; nunca impide guardar (todos los campos son voluntarios). -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" role="dialog" aria-modal="true"
+       aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <h2 class="modal-title" id="modalTitle">Quedaron secciones sin responder</h2>
+    <p class="modal-text" id="modalDesc">Faltaron de llenar las secciones:</p>
+    <ul class="modal-list" id="modalList"></ul>
+    <p class="modal-text">Todos los campos son voluntarios, así que puedes enviarlo tal cual.
+       <strong>¿Estás segure que lo quieres enviar así?</strong></p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="modalCancel" onclick="cerrarModalFaltantes()">Volver a llenar</button>
+      <button type="button" class="btn primary" onclick="confirmarEnvio()">Sí, enviar así</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts: el orden importa (config → api → formulario → app) -->
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/formulario.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

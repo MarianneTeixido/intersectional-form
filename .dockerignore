@@ -1,0 +1,19 @@
+# Nunca meter datos reales en una imagen
+datos/
+*.csv
+*.json.bak
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Cosas que no corren en el servidor
+iniciar.bat
+k8s/
+*.md
+.git/
+.gitignore
+.vscode/
+.idea/

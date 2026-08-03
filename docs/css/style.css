@@ -1,0 +1,315 @@
+/* ============================================================
+   MAPEADOR INTERSECCIONAL — hoja de estilos
+   Índice:
+     1. Reset y variables (fondo blanco, azul desaturado, texto negro)
+     2. Tarjeta principal y portada
+     3. Barra de progreso
+     4. Píldora de edición
+     5. Secciones y campos del formulario
+     6. Etiquetas seleccionables
+     7. Inputs y textareas (estilo de línea, no recuadro)
+     8. Bloques epistémicos
+     9. Cobertura de ejes
+    10. Botones
+    11. Estado del servidor, toast y lista de registros
+    12. Modal de aviso (secciones sin responder)
+    13. Pantalla de agradecimiento
+    14. Panel de administración (admin.html)
+   Accesibilidad (WCAG 2.1 AA): todos los pares texto/fondo
+   cumplen contraste ≥ 4.5:1 y hay foco visible en cada control.
+   ============================================================ */
+
+/* ── 1. Reset y variables ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --page-bg:   #ffffff;
+  --card:      #ffffff;
+  --border:    #e2e2e9;
+  --border-s:  #b8b8c8;
+  --text:      #111111;
+  --muted:     #565664;
+  --accent:    #3f4a7e;   /* azul desaturado (antes #0000ff) */
+  --accent-2:  #3f4a7e;
+  --accent-bg: #eceef6;
+  --accent-on: #dfe3f0;   /* fondo de píldora seleccionada */
+  --accent-bd: #b9c0da;
+  --warm:      #92400e;
+  --warm-bg:   #fef3e2;
+  --ok:        #15803d;
+  --ok-dark:   #14532d;
+  --ok-bg:     #ecfdf3;
+  --danger:    #b91c1c;
+  --danger-bg: #fef2f2;
+  --radius:    4px;       /* esquinas angulosas */
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--page-bg);
+}
+
+body { min-height: 100vh; padding: 2.5rem 1rem 5rem; }
+
+.wrap { max-width: 760px; margin: 0 auto; }
+
+/* Foco visible en todos los controles interactivos (WCAG 2.4.7) */
+.tag:focus-visible, .btn:focus-visible, .btn-xs:focus-visible,
+a:focus-visible, input[type=text]:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── 2. Tarjeta principal y portada ── */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 30px rgba(63, 74, 126, .10);
+  overflow: hidden;
+}
+
+.cover {
+  background: var(--accent-bg);
+  border-bottom: 2px solid var(--accent);
+  padding: 2.6rem 2.5rem 2.2rem;
+  color: var(--text);
+}
+.cover h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -.01em; margin-bottom: .35rem; line-height: 1.3; }
+.cover .byline { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.6; }
+.cover p  { font-size: .95rem; line-height: 1.75; max-width: 60ch; }
+.cover .marco { margin-top: 1.25rem; font-size: .78rem; color: var(--muted);
+                display: inline-block; padding: 5px 12px; border-radius: var(--radius);
+                border: 1px solid var(--accent-bd); background: var(--card); }
+
+.card-body { display: block; padding: 2rem 2.5rem 2.5rem; }
+@media (max-width: 640px) {
+  .cover, .card-body { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .progress-wrap { padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+
+/* ── 3. Barra de progreso (pegada bajo la portada) ── */
+.progress-wrap {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--card);
+  padding: 12px 2.5rem 10px;
+  border-bottom: 1px solid var(--border);
+}
+.progress-label { display: flex; justify-content: space-between;
+                  font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.progress-bar   { height: 8px; border-radius: 2px; background: var(--accent-bg); overflow: hidden; }
+.progress-fill  { height: 100%; width: 0%; border-radius: 2px;
+                  background: var(--accent);
+                  transition: width .35s ease; }
+
+/* ── 4. Píldora de edición (solo en modo ?editar=ID) ── */
+.persona-nav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+}
+/* sin píldora visible no debe dejar hueco sobre el formulario */
+.persona-nav:has(.edit-pill.show) { margin-bottom: 1.75rem; }
+.edit-pill {
+  display: none; align-items: center; gap: 8px;
+  padding: 8px 16px; font-size: .85rem; border-radius: var(--radius);
+  background: var(--warm-bg); color: var(--warm); font-weight: 600;
+  border: 1px solid var(--warm);
+}
+.edit-pill.show { display: inline-flex; }
+
+/* ── 5. Secciones y campos del formulario ── */
+.section { margin-bottom: 2.5rem; }
+.sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: .5rem; }
+.sec-num {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--radius);
+  background: var(--accent-bg); border: 1.5px solid var(--accent);
+  color: var(--text); font-size: .85rem; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  transform: translateY(4px);
+}
+.sec-name { font-size: 1.15rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.4; }
+.sec-desc { font-size: .85rem; color: var(--muted); line-height: 1.75;
+            margin: 0 0 1.5rem 38px; }
+.badge {
+  font-size: .72rem; padding: 3px 10px; border-radius: var(--radius); font-weight: 600;
+  vertical-align: middle; white-space: nowrap;
+}
+.b-str { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-bd); }
+
+.field { margin-bottom: 2rem; }
+.field-label {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: .95rem; font-weight: 600; margin-bottom: 6px; line-height: 1.6;
+}
+.field-hint { font-size: .8rem; color: var(--muted); margin-bottom: 10px; line-height: 1.75; }
+.ftype {
+  font-size: .72rem; padding: 2px 8px; border-radius: var(--radius);
+  border: 1px solid var(--border-s); color: var(--muted); font-weight: 500;
+}
+.ftype.multi { border-color: var(--accent-bd); color: var(--accent); background: var(--accent-bg); }
+.ftype.open  { border-color: var(--warm); color: var(--warm); background: var(--warm-bg); }
+
+hr { border: none; border-top: 1.5px solid var(--border); margin: 2.25rem 0; }
+
+/* ── 6. Etiquetas seleccionables ── */
+.tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: var(--radius);
+  border: 1.5px solid var(--border-s); font-size: .88rem; line-height: 1.5;
+  color: var(--text); cursor: pointer; user-select: none;
+  background: var(--card); transition: all .12s;
+}
+.tag:hover { border-color: var(--accent); background: var(--accent-bg); }
+.tag.on {
+  background: var(--accent-on); border-color: var(--accent);
+  color: var(--text); font-weight: 600;
+}
+
+/* ── 7. Inputs y textareas: línea inferior, sin recuadro ── */
+input[type=text], textarea {
+  width: 100%; padding: 10px 2px; font-size: .95rem;
+  border: none; border-bottom: 1.5px solid var(--border-s); border-radius: 0;
+  background: transparent; color: var(--text);
+  font-family: inherit; line-height: 1.7; transition: border-color .15s, box-shadow .15s;
+}
+input[type=text]:focus, textarea:focus {
+  outline: none; border-bottom-color: var(--accent);
+  box-shadow: 0 1.5px 0 0 var(--accent);
+}
+input::placeholder, textarea::placeholder { color: #6b6b78; opacity: 1; }
+textarea { resize: vertical; min-height: 88px; }
+.other { margin-top: 10px; display: none; }
+.other.show { display: block; }
+
+/* ── 8. Bloques epistémicos ── */
+.ep-block {
+  background: var(--accent-bg); border: 1.5px solid var(--accent-bd);
+  border-radius: 6px; padding: 20px 22px; margin-bottom: 16px;
+}
+.ep-block label { display: block; font-size: .95rem; font-weight: 700;
+                  margin-bottom: 4px; line-height: 1.6; }
+.ep-block span   { display: block; font-size: .8rem; color: var(--muted);
+                   margin-bottom: 12px; line-height: 1.75; }
+.ep-block input[type=text], .ep-block textarea { background: transparent; }
+
+/* ── 9. Cobertura de ejes ── */
+.coverage {
+  background: var(--accent-bg); border: 1.5px solid var(--accent-bd);
+  border-radius: 6px; padding: 20px 22px; margin-top: 2rem;
+}
+.cov-title { font-size: .88rem; font-weight: 700; margin-bottom: 14px; }
+.cov-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+@media (max-width: 520px) { .cov-grid { grid-template-columns: 1fr; } }
+.cov-item  { display: flex; align-items: center; gap: 8px; font-size: .82rem;
+             color: var(--muted); line-height: 1.6; }
+.cov-dot   { width: 18px; height: 18px; border-radius: var(--radius); flex-shrink: 0;
+             border: 1.5px solid var(--border-s); transition: all .2s;
+             display: inline-flex; align-items: center; justify-content: center;
+             font-size: .65rem; color: transparent; background: var(--card); }
+.cov-dot.ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok-dark); }
+.cov-dot.ok::before { content: "✓"; font-weight: 700; }
+
+/* ── 10. Botones ── */
+.actions { margin-top: 2rem; }
+.btn {
+  padding: 14px 20px; font-size: 1rem; border-radius: var(--radius);
+  border: 1.5px solid var(--border-s); background: var(--card);
+  color: var(--text); cursor: pointer; font-family: inherit; font-weight: 600;
+  line-height: 1.5; transition: all .15s;
+}
+.btn:hover { background: var(--accent-bg); border-color: var(--accent); }
+.btn.primary {
+  display: block; width: 100%;
+  background: var(--accent-bg);
+  color: var(--text); border: 2px solid var(--accent); font-size: 1.05rem;
+}
+.btn.primary:hover { background: var(--accent-on); transform: translateY(-1px); }
+.btn.primary:active { transform: translateY(0); }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.btn-row .btn { flex: 1; font-size: .88rem; padding: 11px 14px; }
+
+/* ── 11. Estado del servidor, toast y lista de registros ── */
+.server-note {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  margin-top: 1.5rem; font-size: .8rem; color: var(--muted); line-height: 1.7;
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border-s); flex-shrink: 0; }
+.dot.ok  { background: var(--ok); }
+.dot.err { background: var(--danger); }
+
+.toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(10px);
+  padding: 13px 22px; border-radius: var(--radius);
+  font-size: .88rem; font-weight: 600; line-height: 1.6;
+  color: var(--ok-dark); background: var(--ok-bg); border: 1.5px solid var(--ok);
+  opacity: 0;
+  transition: opacity .25s, transform .25s; pointer-events: none; z-index: 99;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err  { color: var(--danger); background: var(--danger-bg); border-color: var(--danger); }
+
+.list-section { margin-top: 2rem; display: none; }
+.list-section.show { display: block; }
+.list-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+.p-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 14px 16px; background: var(--card);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  margin-bottom: 10px; font-size: .88rem; line-height: 1.6;
+}
+.p-row:hover { border-color: var(--accent); }
+.p-row-name { font-weight: 600; flex: 1; min-width: 120px; }
+.p-row-meta { color: var(--muted); font-size: .8rem; }
+.btn-xs {
+  padding: 6px 14px; font-size: .78rem; border-radius: var(--radius);
+  border: 1.5px solid var(--border-s); background: transparent;
+  color: var(--muted); cursor: pointer; font-family: inherit; transition: all .12s;
+}
+.btn-xs:hover { border-color: var(--accent); color: var(--accent); }
+.btn-xs.del:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+.footer-note { display: block; text-align: center; font-size: .78rem; color: var(--muted);
+               margin-top: 1.75rem; line-height: 1.8; }
+
+/* ── 12. Modal de aviso (secciones sin responder) ── */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 120;
+  display: none; align-items: center; justify-content: center;
+  padding: 1.25rem; background: rgba(17, 17, 17, .55);
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: var(--card); border: 2px solid var(--accent);
+  border-radius: 6px; padding: 26px 28px;
+  max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+.modal-title { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin-bottom: 12px; }
+.modal-text  { font-size: .9rem; line-height: 1.7; color: var(--text); }
+.modal-list  {
+  list-style: none; margin: 12px 0 16px;
+  background: var(--accent-bg); border: 1.5px solid var(--accent-bd);
+  border-radius: var(--radius); padding: 12px 16px;
+}
+.modal-list li { font-size: .88rem; font-weight: 600; line-height: 1.8; }
+.modal-list li::before { content: "— "; color: var(--muted); }
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.modal-actions .btn { flex: 1; min-width: 150px; font-size: .92rem; padding: 12px 16px; }
+.modal-actions .btn.primary { display: block; width: auto; }
+.modal-actions .btn.primary:hover { transform: none; }
+
+/* ── 13. Pantalla de agradecimiento ── */
+.gracias { display: none; text-align: center; padding: 2.5rem 0 1rem; }
+.gracias.show { display: block; }
+.gracias-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 14px; }
+.gracias p { font-size: .92rem; line-height: 1.8; color: var(--muted);
+             max-width: 46ch; margin: 0 auto 12px; }
+.gracias-folio { font-size: .85rem; }
+.gracias .btn { margin-top: 14px; }
+
+/* ── 14. Panel de administración (admin.html) ── */
+.admin-acciones { display: flex; gap: 10px; flex-wrap: wrap; margin: 1.5rem 0; }
+.admin-acciones .btn { flex: 1; min-width: 130px; font-size: .85rem; padding: 11px 14px; }
+.server-note.err-text { color: var(--danger); }
+.vacio { color: var(--muted); font-size: .85rem; }

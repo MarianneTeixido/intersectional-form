@@ -1,0 +1,77 @@
+# La app es sin estado cuando usa PostgreSQL: no necesita volumen ni
+# afinidad de nodo, y se puede escalar en horizontal sin más.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mapeador
+  labels: { app: mapeador }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: mapeador }
+  template:
+    metadata:
+      labels: { app: mapeador }
+    spec:
+      # Sin esto, si Postgres tarda en arrancar el pod entra en
+      # CrashLoopBackOff: AlmacenPostgres conecta al importar main.py.
+      initContainers:
+        - name: esperar-postgres
+          image: postgres:16-alpine
+          command: ["/bin/sh", "-c"]
+          args:
+            - until pg_isready -d "$DATABASE_URL" -t 3; do echo "esperando a Postgres..."; sleep 3; done
+          env:
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: mapeador-config, key: DATABASE_URL } }
+
+      containers:
+        - name: api
+          image: TU-REGISTRY/mapeador:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: ENTORNO            # apaga /docs (Swagger) en producción
+              value: "produccion"
+            - name: PG_POOL_MAX        # conexiones por réplica
+              value: "5"
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: mapeador-config, key: DATABASE_URL } }
+            # Opcional mientras no se decida la autenticación del panel:
+            # si la clave no existe en el Secret, la variable no se define
+            # y las rutas admin quedan abiertas (ver 01-secret.example.yaml).
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef: { name: mapeador-config, key: ADMIN_TOKEN, optional: true }
+
+          # /api no toca la base: sirve para saber si el proceso vive.
+          livenessProbe:
+            httpGet: { path: /api, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          # /api/salud sí consulta el almacén: si la base cae, el pod deja
+          # de recibir tráfico en lugar de responder errores.
+          readinessProbe:
+            httpGet: { path: /api/salud, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          resources:
+            requests: { cpu: 50m,  memory: 128Mi }
+            limits:   { cpu: 500m, memory: 512Mi }
+
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+
+          # Con la raíz de solo lectura, /tmp tiene que ser escribible.
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
