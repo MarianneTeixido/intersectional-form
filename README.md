@@ -50,9 +50,9 @@ En PowerShell son exactamente los mismos tres comandos.
 Después abre <http://localhost:8000> en tu navegador: el mismo servidor sirve el
 formulario y la API. Para detenerlo, `Ctrl + C` en la terminal.
 
-### Con entorno virtual (opcional, recomendado)
+### Con entorno virtual 
 
-Para no mezclar estas dependencias con el resto de tu Python:
+Para no mezclar estas dependencias, crea un entorno virtual y actívalo antes de instalar:
 
 ```powershell
 python -m venv .venv

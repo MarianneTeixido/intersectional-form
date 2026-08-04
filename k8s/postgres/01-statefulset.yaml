@@ -1,0 +1,97 @@
+# PostgreSQL con almacenamiento local-path (el provisionador que trae k3s).
+#
+# local-path guarda los datos en un directorio del nodo, así que:
+#   - el volumen se crea hasta que el pod se agenda (WaitForFirstConsumer) y
+#     desde entonces el pod queda amarrado a ESE nodo;
+#   - replicas es 1 y no puede ser más: el disco no se comparte;
+#   - el volumen NO se puede agrandar después. Pide de una vez lo que quepa.
+#
+# Si el nodo se pierde, se pierde la base: el respaldo cifrado a Garage
+# (k8s/05-cronjob-respaldo.yaml) no es opcional aquí, es la red de seguridad.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels: { app: postgres }
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres }
+  template:
+    metadata:
+      labels: { app: postgres }
+    spec:
+      # En la imagen alpine el usuario postgres es el uid 70. fsGroup deja el
+      # directorio del volumen con el grupo correcto al montarlo.
+      securityContext:
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+              name: postgres
+
+          env:
+            # initdb solo corre la primera vez, con el volumen vacío. Cambiar
+            # estos valores después no altera la base ya creada.
+            - name: POSTGRES_DB
+              value: "mapeador"
+            - name: POSTGRES_USER
+              value: "mapeador"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres-credenciales, key: POSTGRES_PASSWORD }
+            # Los datos van en un subdirectorio, no en la raíz del montaje:
+            # así initdb no se topa con un directorio que no le pertenece.
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+            - name: POSTGRES_INITDB_ARGS
+              value: "--data-checksums"
+
+          # -h 127.0.0.1 a propósito: por el socket local, Postgres responde
+          # "listo" mientras todavía está inicializando.
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-h", "127.0.0.1", "-U", "mapeador", "-d", "mapeador"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-h", "127.0.0.1", "-U", "mapeador", "-d", "mapeador"]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: "1",  memory: 1Gi }
+
+          # Sin readOnlyRootFilesystem: Postgres escribe en /var/run/postgresql
+          # y en /tmp durante el arranque.
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+
+          volumeMounts:
+            - { name: datos, mountPath: /var/lib/postgresql/data }
+
+      # Darle tiempo a cerrar limpio antes del SIGKILL.
+      terminationGracePeriodSeconds: 60
+
+  volumeClaimTemplates:
+    - metadata:
+        name: datos
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 5Gi

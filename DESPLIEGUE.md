@@ -58,6 +58,30 @@ Crea la base y el usuario. El esquema (`backend/esquema_postgres.sql`) se
 aplica solo la primera vez que arranca la app (`CREATE TABLE IF NOT EXISTS`),
 así que no hay que correr nada a mano.
 
+Si el Postgres va a vivir en el mismo cluster, los manifiestos están en
+`k8s/postgres/` (Service + StatefulSet, disco `local-path`) y los sincroniza
+ArgoCD con `argocd/postgres.yaml`. La clave no se versiona, así que va a mano
+y **antes** de la primera sincronización:
+
+```bash
+kubectl create namespace mapeador
+cp k8s/postgres-secret.example.yaml k8s/postgres-secret.yaml   # pon la clave
+kubectl apply -n mapeador -f k8s/postgres-secret.yaml
+kubectl apply -n argocd  -f argocd/postgres.yaml
+```
+
+Esa misma clave tiene que aparecer en el `DATABASE_URL` de `mapeador-config`.
+Comprueba que quedó arriba:
+
+```bash
+kubectl -n mapeador exec -it postgres-0 -- psql -U mapeador -c '\l'
+```
+
+Dos cosas que trae `local-path` y conviene tener presentes: los datos viven en
+un directorio de **un** nodo (el pod queda amarrado a él, y si ese nodo se
+pierde se pierde la base — de ahí el respaldo del paso 5), y el volumen **no
+se puede agrandar** después, así que pide de una vez el tamaño que quepa.
+
 Si ya tienes registros capturados en local (`datos/personas.json`), migra
 una sola vez, desde tu computadora y con acceso a la base:
 

@@ -1,0 +1,62 @@
+# Application de ArgoCD: la base de datos del Mapeador.
+#
+# Se aplica una sola vez, a mano, en el namespace donde vive ArgoCD:
+#
+#   kubectl apply -n argocd -f argocd/postgres.yaml
+#
+# A partir de ahí, lo que esté en k8s/postgres/ del repositorio es lo que hay
+# en el cluster. Para cambiar la base, cambias el archivo y haces push.
+#
+# Antes de la primera sincronización, el Secret con la clave (que no vive en
+# el repositorio) tiene que existir en el namespace destino:
+#
+#   kubectl create namespace mapeador
+#   kubectl apply -n mapeador -f k8s/postgres-secret.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mapeador-postgres
+  namespace: argocd
+  # Sin el finalizer resources-finalizer.argocd.argoproj.io a propósito:
+  # borrar la Application no debe arrastrarse a la base de datos. Si algún
+  # día quieres tirarlo todo, borra los recursos tú, viendo lo que borras.
+spec:
+  project: default
+
+  source:
+    # Si el repositorio es privado, registra las credenciales en ArgoCD
+    # (Settings → Repositories) o usa la forma SSH:
+    #   git@github.com:MarianneTeixido/intersectional-form.git
+    repoURL: https://github.com/MarianneTeixido/intersectional-form.git
+    targetRevision: main
+    path: k8s/postgres          # solo esa carpeta: Service + StatefulSet
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mapeador         # el mismo namespace donde corre la app
+
+  syncPolicy:
+    automated:
+      # prune apagado a propósito: es una base de datos. Si un manifiesto
+      # desaparece del repositorio, prefiero borrarlo a mano que descubrir
+      # que ArgoCD se llevó el StatefulSet por un rebase mal hecho.
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+
+  # Los PVC que crea un StatefulSet (volumeClaimTemplates) los administra
+  # Kubernetes, no ArgoCD, y el campo storage no se puede modificar después:
+  # sin esto, ArgoCD marcaría la aplicación como OutOfSync sin razón.
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      jsonPointers:
+        - /spec/volumeClaimTemplates
